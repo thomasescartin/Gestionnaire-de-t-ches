@@ -1,5 +1,16 @@
 {
   "dependencies": {
-    "init": "^0.1.2"
+    "argon2": "^0.44.0",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "init": "^0.1.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.18.2",
+    "nodemon": "^3.1.14",
+    "yarn": "^1.22.22",
+    "zod": "^4.3.6"
   }
 }
