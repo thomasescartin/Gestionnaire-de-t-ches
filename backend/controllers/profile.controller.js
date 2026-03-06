@@ -19,22 +19,22 @@ exports.authSchema = z.object({
     .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre."),
 });
 
-exports.register = async (req, res) => {
+exports.update = async (req, res) => {
   try {
     const { email, mot_de_passe } = req.body;
 
-    const existing = await utilisateur.findUtilisateurs(email);
+    const existing = await utilisateur.findUtilisateurs(email, mot_de_passe);
 
-    if (existing) {
-      return res.status(400).json({ message: "Email déjà existant" });
+    if (!existing) {
+      return res.status(400).json("Utilisateur introuvable.");
     }
 
     const hashed = await argon2.hash(mot_de_passe);
 
-    const id = await utilisateur.createUtilisateurs(email, hashed);
+    const id = await utilisateur.modifyUtilisateurs(email, hashed);
 
     return res.status(201).json({
-      message: "Utilisateur créé",
+      message: "Email ou mot de passe modifié",
       id,
       email,
     });
@@ -46,31 +46,22 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.delete = async (req, res) => {
   try {
-    const { email, mot_de_passe } = req.body;
+    const { id } = req.body;
 
-    const existing = await utilisateur.findUtilisateurs(email);
+    const existing = await utilisateur.findUtilisateurs(id);
 
     if (!existing) {
-      return res.status(400).json({ message: "Utilisateur n'existe pas" });
+      return res.status(400).json("Utilisateur introuvable.");
     }
 
-    const valid = await argon2.verify(existing.mot_de_passe, mot_de_passe);
+    const idU = await utilisateur.deleteUtilisateur(id);
 
-    if (!valid) {
-      return res
-        .status(401)
-        .json({ message: "Email ou mot de passe incorrect" });
-    }
-
-    const token = jwt.sign(
-      { id: existing.id, email: existing.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    return res.status(200).json({ token });
+    return res.status(201).json({
+      message: "Utilisateur supprimé",
+      idU,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Erreur serveur",

@@ -9,6 +9,6 @@ router.post(
   authMiddleware.authMiddleware, // middleware d'autentification
   registerController.register
 );
-router.post("login", authMiddleware.authMiddleware, loginController.login);
+router.post("/login", authMiddleware.authMiddleware, loginController.login);
 
 module.exports = router;
