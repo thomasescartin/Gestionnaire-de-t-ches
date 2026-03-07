@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
-require("dotenv/config.js");
+require("dotenv/config");
 
-exports.authMiddleware = (res, req, next) => {
-  const token = req.headers.autorization?.split(" ")[1];
+exports.authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Accès refusé" });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("SECRET =", process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {

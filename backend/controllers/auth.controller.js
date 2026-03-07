@@ -25,23 +25,30 @@ exports.register = async (req, res) => {
 
     const existing = await utilisateur.findUtilisateurs(email);
 
-    if (existing) {
-      return res.status(400).json({ message: "Email déjà existant" });
+    if (existing.length > 0) {
+      return res.status(400).json({
+        message: "Email déjà existant",
+      });
+    }
+
+    if (!mot_de_passe) {
+      return res.status(400).json({
+        message: "Mot de passe requis",
+      });
     }
 
     const hashed = await argon2.hash(mot_de_passe);
 
-    const id = await utilisateur.createUtilisateurs(email, hashed);
+    const result = await utilisateur.createUtilisateurs(email, hashed);
 
     return res.status(201).json({
       message: "Utilisateur créé",
-      id,
+      id: result.insertId,
       email,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Erreur serveur",
-      error: error.message,
+    res.status(500).json({
+      message: error.message,
     });
   }
 };
@@ -52,11 +59,25 @@ exports.login = async (req, res) => {
 
     const existing = await utilisateur.findUtilisateurs(email);
 
-    if (!existing) {
+    if (!existing || existing.length === 0) {
       return res.status(400).json({ message: "Utilisateur n'existe pas" });
     }
 
-    const valid = await argon2.verify(existing.mot_de_passe, mot_de_passe);
+    const user = existing[0];
+
+    if (!user.mot_de_passe) {
+      return res.status(500).json({
+        message: "Hash password invalide en base",
+      });
+    }
+
+    if (!mot_de_passe) {
+      return res.status(400).json({
+        message: "Mot de passe requis",
+      });
+    }
+
+    const valid = await argon2.verify(user.mot_de_passe, mot_de_passe);
 
     if (!valid) {
       return res
@@ -65,7 +86,10 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: existing.id, email: existing.email },
+      {
+        id: user.id_utilisateur,
+        email: user.email,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
